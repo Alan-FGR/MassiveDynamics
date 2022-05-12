@@ -4,6 +4,8 @@ using Microsoft.Xna.Framework.Input;
 
 new Test().Run();
 
+
+
 public class Test : Game
 {
     private GraphicsDeviceManager _graphicsDeviceManager;
@@ -39,7 +41,7 @@ public class Test : Game
 
     protected override void Draw(GameTime gameTime)
     {
-        GraphicsDevice.Clear(Color.CornflowerBlue);
+        GraphicsDevice.Clear(Color.Black);
 
         _spriteBatch.Begin();
         _spriteBatch.DrawString(_spriteFont, "Hello MonoGame!", new Vector2(100, 100), Color.White);
