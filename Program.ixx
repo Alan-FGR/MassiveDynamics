@@ -8,7 +8,7 @@ int main()
 
 	DebugRenderer debugRenderer;
 
-	while (1){}
+
 	
 	return 0;
 }
