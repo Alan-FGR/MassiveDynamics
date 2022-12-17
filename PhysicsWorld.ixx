@@ -63,4 +63,30 @@ public:
 
         return pools.AddSimulationEntry(properties, transform.scale, shapeType);
     }
+
+    void Update(float iterationTime)
+    {
+
+        // COLLISION
+
+        // Update AABBs
+
+        // Calculate broad phase pairs
+
+        // Calculate manifolds (contact points)
+
+        // Create joints for contact points
+
+        // IMPULSE SOLVING
+
+        // Solve joints
+
+        // INTEGRATION
+
+        // Apply velocities
+
+        // Apply positions
+        
+    }
+
 };

@@ -75,6 +75,8 @@ public:
 
 	void RunLoop()
 	{
+		double prevUpdateTime = 0.0f;
+
 		while (!shouldQuit)
 		{
 			SDL_SetRenderDrawColor(renderer, 31, 31, 0, 255);
@@ -107,6 +109,12 @@ public:
 				});
 
 			SDL_RenderPresent(renderer); // Debug draw
+
+			if (getElapsedTime() > prevUpdateTime + iterationTime)
+			{
+				prevUpdateTime += iterationTime;
+				physicsWorld.Update(iterationTime);
+			}
 
 			// Handle input
 			SDL_Event ev;
