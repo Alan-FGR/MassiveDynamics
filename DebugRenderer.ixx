@@ -2,8 +2,28 @@ export module DebugRenderer;
 
 import <iostream>;
 
+// #include "glm/glm.hpp"
+// #include "glm/ext.hpp"
+
+// import Transform;
+
 #define SDL_MAIN_HANDLED
 #include "SDL.h"
+
+// using namespace glm;
+
+// struct Vertex
+// {
+//     vec2 position;
+//     unsigned char r, g, b, a;
+// };
+//
+// void SetVertex(SDL_Vertex& vert, const vec2 position, const Uint8* color)
+// {
+//     vert.position.x = position.x;
+//     vert.position.y = position.y;
+//     std::memcpy(&vert.color, color, sizeof Uint8 * 3);
+// }
 
 export class DebugRenderer
 {
@@ -26,5 +46,35 @@ public:
 	~DebugRenderer()
 	{
 		std::cout << "Destroying debug renderer...\n";
-	}	
+		//TODO
+	}
+
+    //void RenderBox(SDL_Renderer* renderer, const Transform& camera, const Transform& transform, const Uint8* color)
+    //{
+    //    // vec2 fd = vec2( 3,4 ) * 3.f;
+
+    //    // vec2 axisX = transform.matX * transform.scale.x;
+    //    // vec2 axisY = transform.matY * transform.scale.y;
+    //    //
+    //    // auto bl = (transform.position - axisX - axisY) * camera.scale.x - camera.position;
+    //    // bl.y *= -1;
+    //    // auto br = (transform.position + axisX - axisY) * camera.scale.x - camera.position;
+    //    // br.y *= -1;
+    //    // auto tr = (transform.position + axisX + axisY) * camera.scale.x - camera.position;
+    //    // tr.y *= -1;
+    //    // auto tl = (transform.position - axisX + axisY) * camera.scale.x - camera.position;
+    //    // tl.y *= -1;
+    //    //
+    //    // SDL_Vertex vert[6];
+    //    //
+    //    // // center
+    //    // SetVertex(vert[0], bl, color);
+    //    // SetVertex(vert[1], br, color);
+    //    // SetVertex(vert[2], tr, color);
+    //    // SetVertex(vert[3], bl, color);
+    //    // SetVertex(vert[4], tl, color);
+    //    // SetVertex(vert[5], tr, color);
+    //    //
+    //    // SDL_RenderGeometry(renderer, NULL, vert, 6, NULL, 0);
+    //}
 };

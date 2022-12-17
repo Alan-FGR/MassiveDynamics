@@ -12,17 +12,18 @@ project ("MassiveDynamicsRefresh")
 add_executable (MassiveDynamicsRefresh 
 "Program.ixx" 
 "DebugRenderer.ixx"
-)
+"Transform.ixx")
 
 set_property(TARGET MassiveDynamicsRefresh PROPERTY CXX_STANDARD 20)
 
 # INCLUDES
+include_directories("Include")
 include_directories("Include/Sdl2")
 
+#add_subdirectory("Dependencies/glm")
+
 # LINKING
-target_link_libraries(MassiveDynamicsRefresh 
-"${PROJECT_SOURCE_DIR}/Libraries/Sdl2/x64/SDL2.lib"
-)
+target_link_libraries(MassiveDynamicsRefresh "${PROJECT_SOURCE_DIR}/Libraries/Sdl2/x64/SDL2.lib")
 
 # COPYING DEPENDENCIES
 add_custom_command(TARGET MassiveDynamicsRefresh POST_BUILD
