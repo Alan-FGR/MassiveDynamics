@@ -5,3 +5,4 @@
 /.vs
 /.idea
 **/*.pdb
+/x64/Debug
