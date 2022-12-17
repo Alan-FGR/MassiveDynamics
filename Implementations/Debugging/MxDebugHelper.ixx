@@ -7,7 +7,7 @@ export import IMxDebugHelper;
 export struct MxDebugHelper : IMxDebugHelper {
     MxDebugHelper() = delete;
 
-    MxDebugHelper(std::unique_ptr<IMxLogger>&& logger)
+    MxDebugHelper(std::unique_ptr<IMxLogger> logger)
     {
         _logger = std::move(logger);
     }
