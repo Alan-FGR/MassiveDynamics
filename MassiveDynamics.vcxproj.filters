@@ -27,7 +27,7 @@
     <ClCompile Include="Transform.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Dynamics.ixx">
+    <ClCompile Include="Data.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="AvxVector.ixx">

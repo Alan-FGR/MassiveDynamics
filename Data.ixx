@@ -1,7 +1,6 @@
 export module Dynamics;
 
-using EntityId = unsigned int;
-
+import TypeAliases;
 import AvxVector;
 
 import "glm/glm.hpp";
@@ -27,6 +26,9 @@ export struct DataPools
 
     avx_vector<DynamicProperties> dynamicProperties;
 
+    avx_vector<vec2> shapeSize;
+    avx_vector<ShapeType> shapeType;
+
     avx_vector<vec2> acceleration;
     avx_vector<float> angularAcceleration;
 
@@ -41,24 +43,27 @@ export struct DataPools
 
     avx_vector<EntityId> entities;
     
-    EntityId AddSimulationEntry(DynamicProperties& dynamicProperties_)
+    EntityId AddSimulationEntry(const DynamicProperties& dynamicProperties_, const vec2& scale_, ShapeType shapeType_)
     {
         auto newId = dynamicProperties.size();
 
         dynamicProperties.emplace_back(dynamicProperties_);
 
+        shapeSize.emplace_back(scale_);
+        shapeType.emplace_back(shapeType_);
+
         acceleration.emplace_back(vec2(0.f, 0.f));
-        angularAcceleration.push_back(0.f);
+        angularAcceleration.emplace_back(0.f);
 
         velocity.emplace_back(vec2(0.f, 0.f));
         displacingVelocity.emplace_back(vec2(0.f, 0.f));
-        angularVelocity.push_back(0.f);
-        displacingAngularVelocity.push_back(0.f);
+        angularVelocity.emplace_back(0.f);
+        displacingAngularVelocity.emplace_back(0.f);
 
-        massInverse.push_back(dynamicProperties_.massInverse);
-        inertiaInverse.push_back(dynamicProperties_.inertiaInverse);
+        massInverse.emplace_back(dynamicProperties_.massInverse);
+        inertiaInverse.emplace_back(dynamicProperties_.inertiaInverse);
 
-        entities.push_back(newId);
+        entities.emplace_back(newId);
 
         return newId;
     }

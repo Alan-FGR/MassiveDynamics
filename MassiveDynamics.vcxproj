@@ -13,7 +13,7 @@
   <ItemGroup>
     <ClCompile Include="AvxVector.ixx" />
     <ClCompile Include="DebugRenderer.ixx" />
-    <ClCompile Include="Dynamics.ixx" />
+    <ClCompile Include="Data.ixx" />
     <ClCompile Include="Shape.ixx" />
     <ClCompile Include="PhysicsWorld.ixx" />
     <ClCompile Include="Program.ixx" />

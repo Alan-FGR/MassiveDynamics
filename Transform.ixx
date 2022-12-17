@@ -9,5 +9,5 @@ export struct Transform
 {
 	vec2 position;
 	vec2 scale;
-	mat2x2 orientation;
+	mat2x2 orientation{vec2{1,0},vec2{0,1}};
 };

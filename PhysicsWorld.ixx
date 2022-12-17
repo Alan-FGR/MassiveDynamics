@@ -38,7 +38,8 @@ public:
 	    for (int i = 0; i < pools.dynamicProperties.size(); ++i)
 	    {
             func(pools.entities[i],
-				pools.dynamicProperties[i]
+				pools.dynamicProperties[i],
+                pools.shapeSize[i]
                 //TODO pass ptrs to other stuff that makes sense (e.g. shape)
             );
 	    }
@@ -52,7 +53,7 @@ public:
         DynamicProperties properties;
         properties.position = transform.position;
         properties.orientation = transform.orientation;
-
+        
         //TODO calc mass from transform and shape
         auto calculatedMassInverse = 0.5f;
         auto calculatedInertiaInverse = 0.5f;
@@ -60,6 +61,6 @@ public:
         properties.massInverse = isKinematic ? 0 : calculatedMassInverse;
         properties.inertiaInverse = isKinematic ? 0 : calculatedInertiaInverse;
 
-        return pools.AddSimulationEntry(properties);
+        return pools.AddSimulationEntry(properties, transform.scale, shapeType);
     }
 };

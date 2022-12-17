@@ -23,11 +23,11 @@ struct Vertex
 	unsigned char r, g, b, a;
 };
 
-void SetVertex(SDL_Vertex& vert, const vec2 position, const Uint8* color)
+void SetVertex(SDL_Vertex& vert, const vec2& position, const Uint8& color)
 {
 	vert.position.x = position.x;
 	vert.position.y = position.y;
-	std::memcpy(&vert.color, color, sizeof Uint8 * 3);
+	std::memcpy(&vert.color, &color, sizeof Uint8 * 3);
 }
 
 export class DebugRenderer
@@ -37,7 +37,7 @@ export class DebugRenderer
 	SDL_Window* window;
 	SDL_Renderer* renderer;
 
-	Transform camera;
+	Transform camera{ vec2{-400,-500}, vec2{-4}, mat2x2{vec2{1,0},vec2{0,1}} };
 	std::vector<Vertex> vertices;
 
 	bool shouldQuit = false;
@@ -77,94 +77,98 @@ public:
 	{
 		while (!shouldQuit)
 		{
-			SDL_SetRenderDrawColor(renderer, 0, 31, 63, 255);
+			SDL_SetRenderDrawColor(renderer, 31, 31, 0, 255);
 			SDL_RenderClear(renderer);
-						
-			const float iterationTime = 1 / 30.f;
 
-			// TODO update camera
+			const float iterationTime = 1 / 30.f;
+			float deltaTime = iterationTime;//TODO calc from elapsed
+
+			const float cameraSpeed = 250;
 
 			vertices.clear();
-			
-			physicsWorld.ForEntity([&](EntityId id, const DynamicProperties& dynamicProperties)
+
+			physicsWorld.ForEntity([&](
+				EntityId id,
+				const DynamicProperties& dynamicProperties,
+				const vec2& shapeSize)
 				{
 					Transform t;
-			
+
 					t.position = dynamicProperties.position;
 					t.orientation = dynamicProperties.orientation;
-					
+					t.scale = shapeSize;
+
 					Uint8 col[3];
 					col[0] = ((id + 0) * 40) % 128;
 					col[1] = ((id + 1) * 40) % 128;
 					col[2] = ((id + 2) * 40) % 128;
-			
-					RenderBox(t, 0, col);
+
+					RenderBox(t, 0, col[0]);
 				});
-			
-			SDL_FRect r;
-			r.w = 10;
-			r.h = 10;
-			r.x = 10;
-			r.y = 10;
-			SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
-			SDL_RenderFillRectF(renderer, &r);
 
 			SDL_RenderPresent(renderer); // Debug draw
-			
+
+			// Handle input
+			SDL_Event ev;
+			while (SDL_PollEvent(&ev) != 0)
 			{
-				// Handle input
-				SDL_Event ev;
-				while (SDL_PollEvent(&ev) != 0)
+				switch (ev.type)
 				{
-					switch (ev.type)
-					{
-					case SDL_QUIT:
+				case SDL_QUIT:
+					shouldQuit = true;
+					break;
+				case SDL_KEYDOWN:
+
+					if (ev.key.keysym.sym == SDLK_ESCAPE)
 						shouldQuit = true;
-						break;
-					case SDL_KEYDOWN:
-						if (ev.key.keysym.sym == SDLK_ESCAPE)
-							shouldQuit = true;
-						break;
-					}
+
+					// Camera controls
+					else if (ev.key.keysym.sym == SDLK_w) camera.position += vec2(0, 1) * deltaTime * cameraSpeed;
+					else if (ev.key.keysym.sym == SDLK_s) camera.position -= vec2(0, 1) * deltaTime * cameraSpeed;
+					else if (ev.key.keysym.sym == SDLK_d) camera.position += vec2(1, 0) * deltaTime * cameraSpeed;
+					else if (ev.key.keysym.sym == SDLK_a) camera.position -= vec2(1, 0) * deltaTime * cameraSpeed;
+					else if (ev.key.keysym.sym == SDLK_e) camera.scale += vec2(1, 1) * deltaTime * cameraSpeed * 0.01f;
+					else if (ev.key.keysym.sym == SDLK_q) camera.scale -= vec2(1, 1) * deltaTime * cameraSpeed * 0.01f;
+
+					break;
 				}
 			}
 		}
 	}
 
-	void RenderBox(const Transform& transform, ShapeType shapeId, const Uint8* color)
+	void RenderBox(const Transform& transform, ShapeType shapeId, const Uint8& color)
 	{
-		std::cout << transform.position.x << "\n";
+		std::cout << camera.position.x << "\n";
 
-		SDL_FRect r;
-		r.w = 10;
-		r.h = 10;
-		r.x = transform.position.x;
-		r.y = transform.position.y;
-		SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
-		SDL_RenderFillRectF(renderer, &r);
+		vec2 axisX = transform.orientation[0] * transform.scale.x;
+		vec2 axisY = transform.orientation[1] * transform.scale.y;
 
-		// vec2 axisX = transform.orientation[0] * transform.scale.x;
-		// vec2 axisY = transform.orientation[1] * transform.scale.y;
-		//
-		// auto bl = (transform.position - axisX - axisY) * camera.scale.x - camera.position;
-		// bl.y *= -1;
-		// auto br = (transform.position + axisX - axisY) * camera.scale.x - camera.position;
-		// br.y *= -1;
-		// auto tr = (transform.position + axisX + axisY) * camera.scale.x - camera.position;
-		// tr.y *= -1;
-		// auto tl = (transform.position - axisX + axisY) * camera.scale.x - camera.position;
-		// tl.y *= -1;
-		//
-		// SDL_Vertex vert[6];
-		//
-		// // center
-		// SetVertex(vert[0], bl, color);
-		// SetVertex(vert[1], br, color);
-		// SetVertex(vert[2], tr, color);
-		// SetVertex(vert[3], bl, color);
-		// SetVertex(vert[4], tl, color);
-		// SetVertex(vert[5], tr, color);
-		//
-		// SDL_RenderGeometry(renderer, NULL, vert, 6, NULL, 0);
+		auto bl = (transform.position - axisX - axisY) * camera.scale.x - camera.position;
+		auto br = (transform.position + axisX - axisY) * camera.scale.x - camera.position;
+		auto tr = (transform.position + axisX + axisY) * camera.scale.x - camera.position;
+		auto tl = (transform.position - axisX + axisY) * camera.scale.x - camera.position;
+		//bl.y *= -1;
+		//br.y *= -1;
+		//tr.y *= -1;
+		//tl.y *= -1;
+
+		SDL_Vertex vert[6];
+
+		SetVertex(vert[0], bl, color);
+		SetVertex(vert[1], br, color);
+		SetVertex(vert[2], tr, color);
+		SetVertex(vert[3], bl, color);
+		SetVertex(vert[4], tl, color);
+		SetVertex(vert[5], tr, color);
+		SDL_RenderGeometry(renderer, nullptr, vert, 6, nullptr, 0);
+
+		// SDL_FRect r;
+		// r.w = 2;
+		// r.h = 2;
+		// r.x = tl.x;
+		// r.y = tl.y;
+		// SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+		// SDL_RenderFillRectF(renderer, &r);
+
 	}
 };

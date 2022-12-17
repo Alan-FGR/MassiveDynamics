@@ -21,6 +21,9 @@ int main()
     
     PhysicsWorld physicsWorld;
 
+    auto floor = Transform{ glm::vec2{0, -10}, glm::vec2{400.f, 4.f} };
+    physicsWorld.AddEntity(floor, 0);
+
     for (int bodyIndex = 0; bodyIndex < 30; bodyIndex++)
     {
         Transform t;
