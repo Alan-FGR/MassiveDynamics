@@ -9,12 +9,5 @@ export struct Transform
 {
 	vec2 position;
 	vec2 scale;
-	vec2 matX;
-	vec2 matY;
-
-	vec2 test()
-	{
-		auto dsd = position * matX.x;
-		return dsd;
-	}
+	mat2x2 orientation;
 };

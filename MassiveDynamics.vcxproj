@@ -11,9 +11,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AvxVector.ixx" />
     <ClCompile Include="DebugRenderer.ixx" />
+    <ClCompile Include="Dynamics.ixx" />
+    <ClCompile Include="Shape.ixx" />
+    <ClCompile Include="PhysicsWorld.ixx" />
     <ClCompile Include="Program.ixx" />
     <ClCompile Include="Transform.ixx" />
+    <ClCompile Include="TypeAliases.ixx" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="Libraries\Sdl2\x64\SDL2.dll">
