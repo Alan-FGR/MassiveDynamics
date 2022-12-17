@@ -1,27 +1,31 @@
 ﻿cmake_minimum_required (VERSION 3.12)
-project ("MassiveDynamics")
 
-# EXECUTABLES
-add_executable (MassiveDynamics "MassiveDynamics.ixx"
+# Enable Hot Reload if supported.
+#if (POLICY CMP0141)
+#  cmake_policy(SET CMP0141 NEW)
+#  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>")
+#endif()
 
-# TODO DEBUG GUARD
-"Interfaces/Debugging/IMxDebugHelper.ixx"
-"Interfaces/Debugging/IMxLogger.ixx"
-"Implementations/Debugging/MxDebugHelper.ixx"
-"Implementations/Debugging/MxConsoleLogger.ixx"
+project ("MassiveDynamicsRefresh")
 
-"Interfaces/IMxPairGenerator.ixx"
-
-"Implementations/MxScene.ixx" 
-
-"MxBuffer.ixx" 
-"MxBodyPool.ixx" 
-"MxSolver.ixx" 
+# SOURCES
+add_executable (MassiveDynamicsRefresh 
+"Program.ixx" 
+"DebugRenderer.ixx"
 )
-include_directories("Include")
-set_property(TARGET MassiveDynamics PROPERTY CXX_STANDARD 20)
 
-# DEPENDENCIES
-include_directories("Dependencies")
+set_property(TARGET MassiveDynamicsRefresh PROPERTY CXX_STANDARD 20)
 
-# TESTS AND INSTALL TARGETS
+# INCLUDES
+include_directories("Include/Sdl2")
+
+# LINKING
+target_link_libraries(MassiveDynamicsRefresh 
+"${PROJECT_SOURCE_DIR}/Libraries/Sdl2/x64/SDL2.lib"
+)
+
+# COPYING DEPENDENCIES
+add_custom_command(TARGET MassiveDynamicsRefresh POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${PROJECT_SOURCE_DIR}/Libraries/Sdl2/x64/SDL2.dll"
+        $<TARGET_FILE_DIR:MassiveDynamicsRefresh>)
