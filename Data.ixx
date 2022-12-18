@@ -2,6 +2,7 @@ export module Dynamics;
 
 import TypeAliases;
 import AvxVector;
+import Shape;
 
 import "glm/glm.hpp";
 import "glm/ext.hpp";
@@ -28,6 +29,7 @@ export struct DataPools
 
     avx_vector<vec2> shapeSize;
     avx_vector<ShapeType> shapeType;
+    avx_vector<Shape> shapeData;
 
     avx_vector<vec2> acceleration;
     avx_vector<float> angularAcceleration;
@@ -46,11 +48,12 @@ export struct DataPools
     EntityId AddSimulationEntry(const DynamicProperties& dynamicProperties_, const vec2& scale_, ShapeType shapeType_)
     {
         auto newId = dynamicProperties.size();
-
+        
         dynamicProperties.emplace_back(dynamicProperties_);
 
         shapeSize.emplace_back(scale_);
         shapeType.emplace_back(shapeType_);
+        shapeData.emplace_back(Shape{ scale_, Aabb{} });
 
         acceleration.emplace_back(vec2(0.f, 0.f));
         angularAcceleration.emplace_back(0.f);

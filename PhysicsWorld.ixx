@@ -7,6 +7,7 @@ import TypeAliases;
 import AvxVector;
 import Transform;
 import Dynamics;
+import Shape;
 
 export class PhysicsWorld
 {
@@ -39,7 +40,8 @@ public:
 	    {
             func(pools.entities[i],
 				pools.dynamicProperties[i],
-                pools.shapeSize[i]
+                pools.shapeSize[i],
+                pools.shapeData[i]
                 //TODO pass ptrs to other stuff that makes sense (e.g. shape)
             );
 	    }
@@ -70,6 +72,14 @@ public:
         // COLLISION
 
         // Update AABBs
+        for (int i = 0; i < pools.dynamicProperties.size(); ++i)
+        {
+            pools.shapeData[i].aabb = Aabb::CalculateFrom(
+                pools.dynamicProperties[i].position,
+                pools.dynamicProperties[i].orientation,
+                pools.shapeSize[i]
+            );
+        }
 
         // Calculate broad phase pairs
 

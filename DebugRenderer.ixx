@@ -7,6 +7,7 @@ import TypeAliases;
 import Transform;
 import PhysicsWorld;
 import Dynamics;
+import Shape;
 
 import "glm/glm.hpp";
 import "glm/ext.hpp";
@@ -28,7 +29,7 @@ void SetVertex(SDL_Vertex& vert, const vec2& position, const Uint8& color)
 	vert.position.x = position.x;
 	vert.position.y = position.y;
 	std::memcpy(&vert.color, &color, sizeof Uint8 * 3);
-}
+};
 
 export class DebugRenderer
 {
@@ -92,7 +93,9 @@ public:
 			physicsWorld.ForEntity([&](
 				EntityId id,
 				const DynamicProperties& dynamicProperties,
-				const vec2& shapeSize)
+				const vec2& shapeSize,
+				const Shape& shapeData
+				)
 				{
 					Transform t;
 
@@ -106,6 +109,16 @@ public:
 					col[2] = ((id + 2) * 40) % 128;
 
 					RenderBox(t, 0, col[0]);
+				});
+
+			physicsWorld.ForEntity([&](
+				EntityId id,
+				const DynamicProperties& dynamicProperties,
+				const vec2& shapeSize,
+				const Shape& shapeData
+				)
+				{
+					RenderAabb(shapeData.aabb);
 				});
 
 			SDL_RenderPresent(renderer); // Debug draw
@@ -178,5 +191,38 @@ public:
 		// SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
 		// SDL_RenderFillRectF(renderer, &r);
 
+	}
+
+	void RenderAabb(const Aabb& aabb)
+	{
+		auto bl = aabb.min * camera.scale.x - camera.position;
+		auto tr = aabb.max * camera.scale.x - camera.position;
+		// bl.y *= -1;
+		// tr.y *= -1;
+
+		SDL_FPoint points[5];
+
+		points[0].x = points[4].x = bl.x;
+		points[0].y = points[4].y = bl.y;
+
+		points[1].x = bl.x;
+		points[1].y = tr.y;
+
+		points[2].x = tr.x;
+		points[2].y = tr.y;
+
+		points[3].x = tr.x;
+		points[3].y = bl.y;
+
+		SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+		SDL_RenderDrawLinesF(renderer, points, 5);
+	}
+
+	void RenderPoint(const vec2& point)
+	{
+		auto p = point * camera.scale.x - camera.position;
+		// p.y *= -1;
+		SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+		SDL_RenderDrawPointF(renderer, p.x, p.y);
 	}
 };

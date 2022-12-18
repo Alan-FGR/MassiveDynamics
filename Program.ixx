@@ -31,6 +31,7 @@ int main()
         t.position = glm::vec2(random(-40.0f, 40.0f), random(10.f, 90.0f));
         const auto length = random(2.0f, 6.0f);
         t.scale = glm::vec2(length, 8 - length);
+        t.SetOrientationAngle(random(0, 2));
         
         physicsWorld.AddEntity(t, 0);
     }
