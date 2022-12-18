@@ -11,92 +11,129 @@ import Shape;
 
 export class PhysicsWorld
 {
-    DataPools pools;
+	DataPools pools;
 
 public:
-    PhysicsWorld()
-    {
+	PhysicsWorld()
+	{
 
-    }
+	}
 
-    PhysicsWorld(const PhysicsWorld& other) = delete;
-    PhysicsWorld& operator=(const PhysicsWorld& other) = delete;
-    PhysicsWorld(PhysicsWorld&& other) noexcept = default;
-    PhysicsWorld& operator=(PhysicsWorld&& other) noexcept = default;
+	PhysicsWorld(const PhysicsWorld& other) = delete;
+	PhysicsWorld& operator=(const PhysicsWorld& other) = delete;
+	PhysicsWorld(PhysicsWorld&& other) noexcept = default;
+	PhysicsWorld& operator=(PhysicsWorld&& other) noexcept = default;
 
-    ~PhysicsWorld()
-    {
-	    
-    }
+	~PhysicsWorld()
+	{
 
-    int EntityCount()
-    {
-	    return pools.dynamicProperties.size();
-    }
+	}
 
-    void ForEntity(auto func)
-    {
-	    for (int i = 0; i < pools.dynamicProperties.size(); ++i)
-	    {
-            func(pools.entities[i],
+	int EntityCount()
+	{
+		return pools.dynamicProperties.size();
+	}
+
+	void ForEntity(auto func)
+	{
+		for (int i = 0; i < pools.dynamicProperties.size(); ++i)
+		{
+			func(pools.entities[i],
 				pools.dynamicProperties[i],
-                pools.shapeSize[i],
-                pools.shapeData[i]
-                //TODO pass ptrs to other stuff that makes sense (e.g. shape)
-            );
-	    }
-    }
+				pools.shapeSize[i],
+				pools.shapeData[i]
+				//TODO pass ptrs to other stuff that makes sense (e.g. shape)
+			);
+		}
+	}
 
-    EntityId AddEntity(Transform& transform, ShapeType shapeType, bool isKinematic = false)
-    {
-        auto density = 1e-5f;
+	EntityId AddEntity(Transform& transform, ShapeType shapeType, bool isKinematic = false)
+	{
+		auto density = 1e-5f;
 
-        //TODO LP memcpy
-        DynamicProperties properties;
-        properties.position = transform.position;
-        properties.orientation = transform.orientation;
-        
-        //TODO calc mass from transform and shape
-        auto calculatedMassInverse = 0.5f;
-        auto calculatedInertiaInverse = 0.5f;
-        
-        properties.massInverse = isKinematic ? 0 : calculatedMassInverse;
-        properties.inertiaInverse = isKinematic ? 0 : calculatedInertiaInverse;
+		//TODO LP memcpy
+		DynamicProperties properties;
+		properties.position = transform.position;
+		properties.orientation = transform.orientation;
 
-        return pools.AddSimulationEntry(properties, transform.scale, shapeType);
-    }
+		//TODO calc mass from transform and shape
+		auto calculatedMassInverse = 0.5f;
+		auto calculatedInertiaInverse = 0.5f;
 
-    void Update(float iterationTime)
-    {
+		properties.massInverse = isKinematic ? 0 : calculatedMassInverse;
+		properties.inertiaInverse = isKinematic ? 0 : calculatedInertiaInverse;
 
-        // COLLISION
+		return pools.AddSimulationEntry(properties, transform.scale, shapeType);
+	}
 
-        // Update AABBs
-        for (int i = 0; i < pools.dynamicProperties.size(); ++i)
-        {
-            pools.shapeData[i].aabb = Aabb::CalculateFrom(
-                pools.dynamicProperties[i].position,
-                pools.dynamicProperties[i].orientation,
-                pools.shapeSize[i]
-            );
-        }
+	struct BroadphaseEntry
+	{
+		Aabb originalAabb;
+		int originalIndex;
+	};
 
-        // Calculate broad phase pairs
+	void Update(float iterationTime)
+	{
+		auto poolSize = pools.dynamicProperties.size();
 
-        // Calculate manifolds (contact points)
+		// COLLISION
 
-        // Create joints for contact points
+		// Update AABBs
+		for (int i = 0; i < poolSize; ++i)
+		{
+			pools.shapeData[i].aabb = Aabb::CalculateFrom(
+				pools.dynamicProperties[i].position,
+				pools.dynamicProperties[i].orientation,
+				pools.shapeSize[i]
+			);
+		}
 
-        // IMPULSE SOLVING
+		// Calculate broad phase pairs
+		std::vector<BroadphaseEntry> broadphaseData;
+		{
+			// TODO SoA, prealloc and cache these
+			avx_vector<std::pair<float, int>> broadphaseDataPairs;
+			avx_vector<std::pair<float, int>> broadphaseDataPairsSorted;
 
-        // Solve joints
+			// Populate pairs to be sorted by aabb max X
+			for (int i = 0; i < poolSize; ++i)
+			{
+				const auto& aabb = pools.shapeData[i].aabb;
+				std::pair<float, int> pair{ aabb.max.x, i }; // Pairs hold their index
+				broadphaseDataPairs.emplace_back(pair);
+			}
 
-        // INTEGRATION
+			broadphaseDataPairsSorted.resize(broadphaseDataPairs.size());
 
-        // Apply velocities
+			std::partial_sort_copy(
+				broadphaseDataPairs.data(), broadphaseDataPairs.data() + poolSize,
+				broadphaseDataPairsSorted.data(), broadphaseDataPairsSorted.data() + poolSize
+			);
 
-        // Apply positions
-        
-    }
+			for (int i = 0; i < poolSize; ++i)
+			{
+				auto originalIndex = broadphaseDataPairsSorted[i].second;
+				const auto& aabb = pools.shapeData[i].aabb;
+
+				BroadphaseEntry e = { aabb, originalIndex };
+				broadphaseData.emplace_back(e);
+			}
+		}
+
+		// Calculate manifolds (contact points)
+
+		// Create joints for contact points
+
+		// IMPULSE SOLVING
+
+		// Solve joints
+
+		// INTEGRATION
+
+		// Apply velocities
+
+		// Apply positions
+
+	}
 
 };
