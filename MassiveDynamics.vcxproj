@@ -25,6 +25,16 @@
       <FileType>Document</FileType>
     </CopyFileToFolders>
   </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="Libraries\Sdl2\x64\SDL2_ttf.dll">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="Assets\CascadiaMono.ttf">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -60,7 +70,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Users\alanq\source\repos\MassiveDynamics\Include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Users\alanq\source\repos\MassiveDynamics\Include;C:\Users\alanq\source\repos\MassiveDynamics\Include\sdl2;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Users\alanq\source\repos\MassiveDynamics\Libraries\Sdl2\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -74,7 +84,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>sdl2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2_ttf.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

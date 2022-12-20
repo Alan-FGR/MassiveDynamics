@@ -2,6 +2,8 @@ export module DebugRenderer;
 
 import <iostream>;
 import <vector>;
+import <sstream>;
+import <iomanip>;
 
 import TypeAliases;
 import Transform;
@@ -10,11 +12,13 @@ import Dynamics;
 import Shape;
 
 import "glm/glm.hpp";
+import "glm/gtx/compatibility.hpp";
 import "glm/ext.hpp";
 
 #define SDL_MAIN_HANDLED
 
 #include "sdl2/SDL.h"
+#include "SDL_ttf.h"
 
 using namespace glm;
 
@@ -38,7 +42,9 @@ export class DebugRenderer
 	SDL_Window* window;
 	SDL_Renderer* renderer;
 
-	Transform camera{ vec2{-400,-500}, vec2{-4}, mat2x2{vec2{1,0},vec2{0,1}} };
+	TTF_Font* Font;
+
+	Transform camera{ vec2{-400,-500}, vec2{-2}, mat2x2{vec2{1,0},vec2{0,1}} };
 	std::vector<Vertex> vertices;
 
 	bool shouldQuit = false;
@@ -61,6 +67,11 @@ public:
 
 		SDL_SetHint(SDL_HINT_RENDER_BATCHING, "1");
 		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+
+		TTF_Init();
+		Font = TTF_OpenFont("CascadiaMono.ttf", 8);
+		if (Font == nullptr)
+			std::cout << TTF_GetError() << "\n";
 	}
 
 	DebugRenderer(const DebugRenderer& other) = delete;
@@ -73,7 +84,7 @@ public:
 		SDL_DestroyWindow(window);
 		SDL_Quit();
 	}
-
+	
 	void RunLoop()
 	{
 		double prevUpdateTime = 0.0f;
@@ -90,7 +101,7 @@ public:
 
 			vertices.clear();
 
-			physicsWorld.ForEntity([&](
+			/*physicsWorld.ForEntity([&](
 				EntityId id,
 				const DynamicProperties& dynamicProperties,
 				const vec2& shapeSize,
@@ -119,15 +130,62 @@ public:
 				)
 				{
 					RenderAabb(shapeData.aabb);
-				});
-
-			SDL_RenderPresent(renderer); // Debug draw
+				});*/
 
 			if (getElapsedTime() > prevUpdateTime + iterationTime)
 			{
 				prevUpdateTime += iterationTime;
-				physicsWorld.Update(iterationTime);
+
+				// COLLISION
+
+				// Update AABBs
+				auto aabbs = physicsWorld.UpdateAABBs();
+				for (const auto& aabb : aabbs)
+				{
+					RenderAabb(aabb);
+				}
+
+				// Sort AABBs
+				auto sortedAabbs = physicsWorld.SortAabbs(aabbs);
+				for (int i = 0; i < sortedAabbs.size() - 1; ++i)
+				{
+					const auto& current = sortedAabbs[i].originalAabb;
+					const auto& next = sortedAabbs[i+1].originalAabb;
+					
+					RenderLine(
+						lerp(current.min, current.max, .5f),
+						lerp(next.min, next.max, .5f)
+					);
+				}
+
+				// Create AABBs pairs
+				auto overlaps = physicsWorld.CreatePairs(sortedAabbs);
+				for (const auto& overlap : overlaps)
+				{
+					const auto& bodyA = physicsWorld.pools.dynamicProperties[overlap.firstEntityIndex];
+					const auto& bodyB = physicsWorld.pools.dynamicProperties[overlap.secondEntityIndex];
+
+
+				}
+
+				// Calculate manifolds (contact points)
+
+
+				// Create joints for contact points
+
+				// IMPULSE SOLVING
+
+				// Solve joints
+
+				// INTEGRATION
+
+				// Apply velocities
+
+				// Apply positions
+
 			}
+			
+			SDL_RenderPresent(renderer);
 
 			// Handle input
 			SDL_Event ev;
@@ -155,6 +213,14 @@ public:
 				}
 			}
 		}
+	}
+
+	vec2 WorldToScreen(const vec2& input) const
+	{
+		return vec2{
+			 input.x * camera.scale.x - camera.position.x,
+			 input.y * camera.scale.y - camera.position.y,
+		};
 	}
 
 	void RenderBox(const Transform& transform, ShapeType shapeId, const Uint8& color)
@@ -216,6 +282,8 @@ public:
 
 		SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
 		SDL_RenderDrawLinesF(renderer, points, 5);
+
+		RenderText(aabb.min, aabb.min.x, aabb.min.y, aabb.max.x, aabb.max.y);
 	}
 
 	void RenderPoint(const vec2& point)
@@ -225,4 +293,41 @@ public:
 		SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
 		SDL_RenderDrawPointF(renderer, p.x, p.y);
 	}
+
+	void RenderLine(const vec2& start, const vec2& end)
+	{
+		auto convStart = start * camera.scale.x - camera.position;
+		auto convEnd = end * camera.scale.x - camera.position;
+		SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+		SDL_RenderDrawLineF(renderer, convStart.x, convStart.y, convEnd.x, convEnd.y);
+	}
+	
+	void print(std::ostringstream& stream) {}
+
+	template <typename T> void print(std::ostringstream& stream, const T& t) {
+		stream << t;
+	}
+
+	template <typename First, typename... Rest> void print(std::ostringstream& stream, const First& first, const Rest&... rest) {
+		stream << first << ", ";
+		print(stream, rest...); // recursive call using pack expansion syntax
+	}
+
+	template<typename... Ts>
+	void RenderText(const vec2& position, Ts const&... ts)
+	{
+		auto screenPos = WorldToScreen(position);
+		std::ostringstream stringStream;
+		stringStream << std::fixed << std::setprecision(0);
+		print(stringStream, ts...);
+		auto string = stringStream.str();
+		if (string.size() <= 0) return;
+		SDL_Surface* surface = TTF_RenderText_Solid(Font, string.c_str(), SDL_Color{ 255, 255, 255, 191 });
+		SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+		const SDL_Rect rect = { screenPos.x, screenPos.y, surface->w, surface->h };
+		SDL_RenderCopy(renderer, texture, nullptr, &rect);
+		SDL_FreeSurface(surface);
+		SDL_DestroyTexture(texture);
+	}
+
 };

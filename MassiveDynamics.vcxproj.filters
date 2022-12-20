@@ -47,5 +47,11 @@
     <CopyFileToFolders Include="Libraries\Sdl2\x64\SDL2.dll">
       <Filter>Dynamic Dependencies</Filter>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="Libraries\Sdl2\x64\SDL2_ttf.dll">
+      <Filter>Dynamic Dependencies</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="Assets\CascadiaMono.ttf">
+      <Filter>Dynamic Dependencies</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
 </Project>
