@@ -24,7 +24,7 @@ export struct Aabb
 		max(max_)
 	{}
 
-	bool IntersectsWith(const Aabb& other) const
+	bool IntersectsWith(const Aabb& other) const // TODO rem?
 	{
 		return
 			((max.x > other.min.x) || (other.max.x > min.x)) ||
