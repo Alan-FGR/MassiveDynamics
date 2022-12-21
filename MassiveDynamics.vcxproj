@@ -70,8 +70,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Users\alanq\source\repos\MassiveDynamics\Include;C:\Users\alanq\source\repos\MassiveDynamics\Include\sdl2;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\alanq\source\repos\MassiveDynamics\Libraries\Sdl2\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)\Include;$(ProjectDir)\Include\sdl2;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)\Libraries\Sdl2\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>

@@ -19,9 +19,9 @@ export struct Aabb
 
 	Aabb() = default;
 
-	Aabb(const vec2& max_, const vec2& min_) :
-		max(max_),
-		min(min_)
+	Aabb(const vec2& min_, const vec2& max_) :
+		min(min_),
+		max(max_)
 	{}
 
 	bool IntersectsWith(const Aabb& other) const

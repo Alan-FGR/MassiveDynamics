@@ -180,7 +180,9 @@ public:
 	std::vector<OverlapPoints> CreatePairs(std::vector<BroadphaseEntry> sortedAabbs)
 	{
 		auto poolSize = sortedAabbs.size(); // TODO
-		
+
+		// TODO we could also build all intersections on one axis, then solve the other in multiple threads
+
 		// TODO one collection per thread then join all
 		std::unordered_set<std::pair<int, int>, _intPairHasher> pairs;
 
@@ -197,6 +199,7 @@ public:
 				// TODO we could do a clever trick by subtracting min y and comparing to height difference
 				// TODO it might be faster to remove duplicates at a later pass, use a different set here (robin probably)
 				// TODO if MT, make this thread safe then
+				// In compiler we trust... to make this branchless
 				if (nextEntry.originalAabb.max.y > currentEntry.originalAabb.min.y &&
 					nextEntry.originalAabb.min.y < currentEntry.originalAabb.max.y)
 					pairs.emplace(std::make_pair(

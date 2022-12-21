@@ -16,7 +16,6 @@ import "glm/gtx/compatibility.hpp";
 import "glm/ext.hpp";
 
 #define SDL_MAIN_HANDLED
-
 #include "sdl2/SDL.h"
 #include "SDL_ttf.h"
 
@@ -44,7 +43,7 @@ export class DebugRenderer
 
 	TTF_Font* Font;
 
-	Transform camera{ vec2{-400,-500}, vec2{-2}, mat2x2{vec2{1,0},vec2{0,1}} };
+	Transform camera{ vec2{-400,-500}, vec2{2, -2}, mat2x2{vec2{1,0},vec2{0,1}} };
 	std::vector<Vertex> vertices;
 
 	bool shouldQuit = false;
@@ -52,6 +51,13 @@ export class DebugRenderer
 	static double getElapsedTime() {
 		return SDL_GetPerformanceCounter() / (double)SDL_GetPerformanceFrequency();
 	}
+
+	const static struct DebugColors
+	{
+		constexpr static SDL_Color BroadphaseAabb{ 255,0,0,255 };
+		constexpr static SDL_Color BroadphasePair{ 255,255,0,255 };
+		constexpr static SDL_Color SortingPointer{ 255,0,0,127 };
+	};
 
 public:
 	explicit DebugRenderer(PhysicsWorld& physics_world)
@@ -67,6 +73,7 @@ public:
 
 		SDL_SetHint(SDL_HINT_RENDER_BATCHING, "1");
 		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+		SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
 		TTF_Init();
 		Font = TTF_OpenFont("CascadiaMono.ttf", 8);
@@ -154,7 +161,8 @@ public:
 					
 					RenderLine(
 						lerp(current.min, current.max, .5f),
-						lerp(next.min, next.max, .5f)
+						lerp(next.min, next.max, .5f),
+						DebugColors::SortingPointer
 					);
 				}
 
@@ -165,7 +173,10 @@ public:
 					const auto& bodyA = physicsWorld.pools.dynamicProperties[overlap.firstEntityIndex];
 					const auto& bodyB = physicsWorld.pools.dynamicProperties[overlap.secondEntityIndex];
 
+					const auto& aabbA = aabbs[overlap.firstEntityIndex];
+					const auto& aabbB = aabbs[overlap.secondEntityIndex];
 
+					RenderLine(aabbA.min, aabbB.min, DebugColors::BroadphasePair);
 				}
 
 				// Calculate manifolds (contact points)
@@ -202,12 +213,12 @@ public:
 						shouldQuit = true;
 
 					// Camera controls
-					else if (ev.key.keysym.sym == SDLK_w) camera.position += vec2(0, 1) * deltaTime * cameraSpeed;
-					else if (ev.key.keysym.sym == SDLK_s) camera.position -= vec2(0, 1) * deltaTime * cameraSpeed;
+					else if (ev.key.keysym.sym == SDLK_w) camera.position += vec2(0, 1) * deltaTime * -cameraSpeed;
+					else if (ev.key.keysym.sym == SDLK_s) camera.position -= vec2(0, 1) * deltaTime * -cameraSpeed;
 					else if (ev.key.keysym.sym == SDLK_d) camera.position += vec2(1, 0) * deltaTime * cameraSpeed;
 					else if (ev.key.keysym.sym == SDLK_a) camera.position -= vec2(1, 0) * deltaTime * cameraSpeed;
-					else if (ev.key.keysym.sym == SDLK_e) camera.scale += vec2(1, 1) * deltaTime * cameraSpeed * 0.01f;
-					else if (ev.key.keysym.sym == SDLK_q) camera.scale -= vec2(1, 1) * deltaTime * cameraSpeed * 0.01f;
+					else if (ev.key.keysym.sym == SDLK_e) camera.scale += vec2(1, -1) * deltaTime * cameraSpeed * 0.01f;
+					else if (ev.key.keysym.sym == SDLK_q) camera.scale -= vec2(1, -1) * deltaTime * cameraSpeed * 0.01f;
 
 					break;
 				}
@@ -225,20 +236,14 @@ public:
 
 	void RenderBox(const Transform& transform, ShapeType shapeId, const Uint8& color)
 	{
-		std::cout << camera.position.x << "\n";
-
 		vec2 axisX = transform.orientation[0] * transform.scale.x;
 		vec2 axisY = transform.orientation[1] * transform.scale.y;
 
-		auto bl = (transform.position - axisX - axisY) * camera.scale.x - camera.position;
-		auto br = (transform.position + axisX - axisY) * camera.scale.x - camera.position;
-		auto tr = (transform.position + axisX + axisY) * camera.scale.x - camera.position;
-		auto tl = (transform.position - axisX + axisY) * camera.scale.x - camera.position;
-		//bl.y *= -1;
-		//br.y *= -1;
-		//tr.y *= -1;
-		//tl.y *= -1;
-
+		auto bl = WorldToScreen(transform.position - axisX - axisY);
+		auto br = WorldToScreen(transform.position + axisX - axisY);
+		auto tr = WorldToScreen(transform.position + axisX + axisY);
+		auto tl = WorldToScreen(transform.position - axisX + axisY);
+		
 		SDL_Vertex vert[6];
 
 		SetVertex(vert[0], bl, color);
@@ -248,23 +253,12 @@ public:
 		SetVertex(vert[4], tl, color);
 		SetVertex(vert[5], tr, color);
 		SDL_RenderGeometry(renderer, nullptr, vert, 6, nullptr, 0);
-
-		// SDL_FRect r;
-		// r.w = 2;
-		// r.h = 2;
-		// r.x = tl.x;
-		// r.y = tl.y;
-		// SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
-		// SDL_RenderFillRectF(renderer, &r);
-
 	}
 
 	void RenderAabb(const Aabb& aabb)
 	{
-		auto bl = aabb.min * camera.scale.x - camera.position;
-		auto tr = aabb.max * camera.scale.x - camera.position;
-		// bl.y *= -1;
-		// tr.y *= -1;
+		auto bl = WorldToScreen(aabb.min);
+		auto tr = WorldToScreen(aabb.max);
 
 		SDL_FPoint points[5];
 
@@ -280,36 +274,35 @@ public:
 		points[3].x = tr.x;
 		points[3].y = bl.y;
 
-		SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+		auto& color = DebugColors::BroadphaseAabb;
+		SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
 		SDL_RenderDrawLinesF(renderer, points, 5);
 
-		RenderText(aabb.min, aabb.min.x, aabb.min.y, aabb.max.x, aabb.max.y);
+		RenderText(aabb.min, aabb.min.x, aabb.max.x, "|", aabb.min.y, aabb.max.y);
 	}
 
 	void RenderPoint(const vec2& point)
 	{
-		auto p = point * camera.scale.x - camera.position;
+		auto p = WorldToScreen(point);
 		// p.y *= -1;
 		SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
 		SDL_RenderDrawPointF(renderer, p.x, p.y);
 	}
 
-	void RenderLine(const vec2& start, const vec2& end)
+	void RenderLine(const vec2& start, const vec2& end, const SDL_Color color)
 	{
-		auto convStart = start * camera.scale.x - camera.position;
-		auto convEnd = end * camera.scale.x - camera.position;
-		SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+		auto convStart = WorldToScreen(start);
+		auto convEnd = WorldToScreen(end);
+		SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
 		SDL_RenderDrawLineF(renderer, convStart.x, convStart.y, convEnd.x, convEnd.y);
 	}
 	
 	void print(std::ostringstream& stream) {}
-
 	template <typename T> void print(std::ostringstream& stream, const T& t) {
 		stream << t;
 	}
-
 	template <typename First, typename... Rest> void print(std::ostringstream& stream, const First& first, const Rest&... rest) {
-		stream << first << ", ";
+		stream << first << ",";
 		print(stream, rest...); // recursive call using pack expansion syntax
 	}
 
