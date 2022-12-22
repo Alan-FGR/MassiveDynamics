@@ -1,9 +1,9 @@
-export module AvxVector;
+#pragma once
 
-import <vector>;
+#include <vector>
 
 // TODO profile this vs custom impl
-export template <class T>
+template <class T>
 struct avx_allocator
 {
     //using value_type = T;
@@ -29,5 +29,5 @@ struct avx_allocator
     }
 };
 
-export template<typename T>
+template<typename T>
 using avx_vector = std::vector<T, avx_allocator<T>>;

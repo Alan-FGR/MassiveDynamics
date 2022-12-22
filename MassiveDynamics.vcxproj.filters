@@ -18,28 +18,34 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Program.ixx">
+    <ClCompile Include="Program.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DebugRenderer.ixx">
+    <ClCompile Include="DebugRenderer.h">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Transform.ixx">
+    <ClCompile Include="Transform.h">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Data.ixx">
+    <ClCompile Include="Data.h">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="AvxVector.ixx">
+    <ClCompile Include="AvxVector.h">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PhysicsWorld.ixx">
+    <ClCompile Include="PhysicsWorld.h">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TypeAliases.ixx">
+    <ClCompile Include="TypeAliases.h">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Shape.ixx">
+    <ClCompile Include="Shape.h">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Shape.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PhysicsWorld.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

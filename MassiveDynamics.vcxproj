@@ -11,14 +11,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AvxVector.ixx" />
-    <ClCompile Include="DebugRenderer.ixx" />
-    <ClCompile Include="Data.ixx" />
-    <ClCompile Include="Shape.ixx" />
-    <ClCompile Include="PhysicsWorld.ixx" />
-    <ClCompile Include="Program.ixx" />
-    <ClCompile Include="Transform.ixx" />
-    <ClCompile Include="TypeAliases.ixx" />
+    <ClCompile Include="AvxVector.h" />
+    <ClCompile Include="DebugRenderer.h" />
+    <ClCompile Include="Data.h" />
+    <ClCompile Include="PhysicsWorld.cpp" />
+    <ClCompile Include="Shape.cpp" />
+    <ClCompile Include="Shape.h" />
+    <ClCompile Include="PhysicsWorld.h" />
+    <ClCompile Include="Program.cpp" />
+    <ClCompile Include="Transform.h" />
+    <ClCompile Include="TypeAliases.h" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="Libraries\Sdl2\x64\SDL2.dll">

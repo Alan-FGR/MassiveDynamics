@@ -1,15 +1,13 @@
-export module Dynamics;
+#pragma once
 
-import TypeAliases;
-import AvxVector;
-import Shape;
+#include "glm/glm.hpp"
+#include "glm/ext.hpp"
 
-import "glm/glm.hpp";
-import "glm/ext.hpp";
+#include "AvxVector.h"
+#include "Shape.h"
+#include "TypeAliases.h"
 
-using namespace glm;
-
-export struct DynamicProperties
+struct DynamicProperties
 {
     float massInverse;
     float inertiaInverse;
@@ -17,7 +15,7 @@ export struct DynamicProperties
     mat2x2 orientation;
 };
 
-export struct DataPools
+struct DataPools
 {
 	DataPools() = default;
 	DataPools(const DataPools& other) = delete;

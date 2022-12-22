@@ -1,12 +1,12 @@
-export module Transform;
+#pragma once
 
-import "glm/glm.hpp";
-import "glm/ext.hpp";
-import "glm/gtx/euler_angles.hpp";
+#include "glm/glm.hpp"
+#include "glm/ext.hpp"
+#include "glm/gtx/euler_angles.hpp"
 
 using namespace glm;
 
-export struct Transform
+struct Transform
 {
 	vec2 position;
 	vec2 scale;

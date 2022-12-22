@@ -1,35 +1,36 @@
-export module PhysicsWorld;
+#pragma once
 
-#include "glm/glm.hpp";
-#include "glm/ext.hpp";
-#include "glm/gtx/component_wise.hpp";
-#include "glm/gtx/norm.hpp";
-//import "glm/gtx/intersect.hpp";
+#include "glm/glm.hpp"
+#include "glm/ext.hpp"
+#include "glm/gtx/component_wise.hpp"
+#include "glm/gtx/norm.hpp"
+#include "glm/gtx/intersect.hpp"
 
-import <algorithm>;
-import <memory>;
-import <vector>;
-import <unordered_set>;
+#include <algorithm>
+#include <memory>
+#include <vector>
+#include <unordered_set>
 
-import TypeAliases;
-import AvxVector;
-import Transform;
-import Dynamics;
-import Shape;
+#include "AvxVector.h"
+#include "Data.h"
+#include "Shape.h"
+#include "Transform.h"
+#include "TypeAliases.h"
 
 using namespace glm;
 
-export struct BroadphaseEntry
+struct BroadphaseEntry
 {
 	Aabb originalAabb;
 	int originalIndex;
 };
 
-export class PhysicsWorld
+class PhysicsWorld
 {
 
 public:
-	DataPools pools;
+	DataPools pools; // TODO
+
 	PhysicsWorld()
 	{
 
@@ -63,7 +64,7 @@ public:
 		}
 	}
 
-	EntityId AddEntity(Transform& transform, ShapeType shapeType, bool isKinematic = false)
+	EntityId AddEntity(const Transform& transform, const ShapeType shapeType, bool isKinematic = false)
 	{
 		auto density = 1e-5f;
 
@@ -197,7 +198,7 @@ public:
 			}
 			return false;
 		}
-
+		
 		int GetPointCount() const { return pointsCount; }
 		void ResetPointCount() { pointsCount = 0; }
 	};
@@ -273,47 +274,47 @@ public:
 	{
 		//TODO further parallelize this to AVX2 - i.e. compute multiple
 		//TODO FMA could be used here in some operations
-
+	
 		const float* body1Orientation = &transform1.orientation[0].x;
 		const float* body2Orientation = &transform2.orientation[0].x;
 		const float* shape1Size = &shape1.size.x;
 		const float* shape2Size = &shape2.size.x;
-
+	
 		vec2 distance = transform1.position - transform2.position;
-
+	
 		// TODO apparently shuffle is faster than permute? :(((((((((( if confirmed refactor!
-
+	
 		auto colAx = _mm_permute_ps(_mm_load_ps(body1Orientation), _MM_PERM_CCAA);
 		auto colBx = _mm_permute_ps(_mm_load_ps(body2Orientation), _MM_PERM_CACA);
-
+	
 		auto colAy = _mm_permute_ps(_mm_load_ps(body1Orientation), _MM_PERM_DDBB);
 		auto colBy = _mm_permute_ps(_mm_load_ps(body2Orientation), _MM_PERM_DBDB);
-
+	
 		auto innerProds = _mm_add_ps(_mm_mul_ps(colAx, colBx), _mm_mul_ps(colAy, colBy));
-
+	
 		auto absMask = _mm_castsi128_ps(_mm_set1_epi32(0x7FFFFFFF));
 		auto absProds = _mm_and_ps(absMask, innerProds);
-
+	
 		auto colS1 = _mm_permute_ps(_mm_load_ps(shape1Size), _MM_PERM_AABA);
 		auto colS2 = _mm_permute_ps(_mm_load_ps(shape2Size), _MM_PERM_BAAA);
 		auto colD1 = _mm_permute_ps(absProds, _MM_PERM_BACA);
 		auto colD2 = _mm_permute_ps(absProds, _MM_PERM_DCDB);
-
+	
 		auto colS3 = _mm_shuffle_ps(colS2, colS1, _MM_PERM_BBDD);
-
+	
 		auto rSums =
 			_mm_add_ps(
 				_mm_add_ps(
 					_mm_mul_ps(colS2, colD1),
 					_mm_mul_ps(colS3, colD2)),
 				colS1);
-
+	
 		auto orsA = _mm_shuffle_ps(colAx, colBx, _MM_PERM_DCCA);
 		auto orsB = _mm_shuffle_ps(colAy, colBy, _MM_PERM_BACA);
-
+	
 		auto dists0 = _mm_broadcast_ss(&distance[0]);
 		auto dists1 = _mm_broadcast_ss(&distance[1]);
-
+	
 		auto rDists =
 			_mm_sub_ps(
 				_mm_and_ps(absMask,
@@ -321,24 +322,24 @@ public:
 						_mm_mul_ps(orsA, dists0),
 						_mm_mul_ps(orsB, dists1))),
 				rSums);
-
+	
 		// faster way to check whether at least one float in rDists is >= 0
 		//auto signMask = _mm_srli_epi32(_mm_set1_epi32(1), 31); // not sure what could go wrong passing 0x8000000 here?
 		//auto allNegative = _mm_test_all_zeros(signMask, _mm_castps_si128(rDists));
-
+	
 		auto greaterThanZero = _mm_cmpgt_ps(rDists, _mm_setzero_ps());
 		auto anyGreaterThanZero = _mm_movemask_ps(greaterThanZero);
-
+	
 		if (anyGreaterThanZero) return false;
-
+	
 		// at this point we need to get the horizontal max and index
 		// but we're about to leave the routine so we just dump the vector to proceed
-
+	
 		float dists[4];
 		_mm_storeu_ps(&dists[0], rDists);
-
+	
 		auto greatest = std::distance(&dists[0], std::max_element(&dists[0], &dists[4])); // TODO C++23 ranges
-
+	
 		switch (greatest)
 		{
 		case 0:
@@ -362,14 +363,14 @@ public:
 				body2Orientation[3] };
 			break;
 		}
-
+	
 		return true;
 	}
 
 	static int CalculateContactPoints(const vec2& size, const vec2& axis, vec2* supportPoints, const vec2& pos, const mat2x2& rot)
 	{
 		auto distToEdgeMidPoint = min(abs(compAdd(axis * rot[0])), abs(compAdd(axis * rot[1])));
-
+	
 		if (distToEdgeMidPoint < 0.1f) // TODO magic number tweak
 		{
 			vec2& edgePoint1 = supportPoints[0];
@@ -427,14 +428,14 @@ public:
 		}
 	}
 
-	static void AddContactPointToBuffer(ContactPoint* pointsBuffer, int& pointCountToIncrement, ContactPoint& newPoint)
+	static void AddContactPointToBuffer(std::vector<ContactPoint>& newPointsBuffer, int& pointCountToIncrement, ContactPoint& newPoint)
 	{
 		ContactPoint* closest = nullptr;
 		auto smallestDepth = std::numeric_limits<float>::max();
 
 		for (int pointIndex = 0; pointIndex < pointCountToIncrement; pointIndex++)
 		{
-			ContactPoint& existingPoint = pointsBuffer[pointIndex];
+			ContactPoint& existingPoint = newPointsBuffer[pointIndex];
 			
 			if (length2(existingPoint.localPointA - newPoint.localPointA) < 4.f || // TODO tweak magic number
 				length2(existingPoint.localPointB - newPoint.localPointB) < 4.f)
@@ -460,23 +461,24 @@ public:
 		{
 			newPoint.isMerged = true;
 			newPoint.isNew = true;
-			pointsBuffer[pointCountToIncrement++] = newPoint;
+			newPointsBuffer[pointCountToIncrement] = newPoint;
+			pointCountToIncrement++;
 		}
 	}
 
-	static vec2 GetPerpendicular(const vec2& value)
-	{
-		return vec2{ -value.y, value.x };
-	}
-
-	static void IntersectRayPlane(const vec2& point, const vec2& planePoint, const vec2& planeNormal, const vec2& projectionDirection,	vec2& output)
-	{
-		const auto multiplier = 1.f / compAdd(projectionDirection * planeNormal);
-		output = point + projectionDirection * (planePoint * planeNormal - point * planeNormal) * multiplier;
-	}
+	 static vec2 GetPerpendicular(const vec2& value)
+	 {
+	 	return vec2{ -value.y, value.x };
+	 }
+	
+	 static void IntersectRayPlane(const vec2& point, const vec2& planePoint, const vec2& planeNormal, const vec2& projectionDirection,	vec2& output)
+	 {
+	 	const auto multiplier = 1.f / compAdd(projectionDirection * planeNormal);
+	 	output = point + projectionDirection * (planePoint * planeNormal - point * planeNormal) * multiplier;
+	 }
 
 	static void GenerateContacts(const Transform& transform1, const Transform& transform2, const Shape& shape1, const Shape& shape2,
-		vec2& separatingAxis, ContactPoint* pointsBuffer, int& pointCountToIncrement)
+		vec2& separatingAxis, std::vector<ContactPoint>& newPointsBuffer, int& pointCountToIncrement)
 	{
 		if (compAdd(separatingAxis * (transform1.position - transform2.position)) < 0.0f)
 			separatingAxis *= -1.f;
@@ -507,7 +509,7 @@ public:
 			if (compAdd(delta * separatingAxis) >= 0.0f)
 			{
 				ContactPoint newPoint(transform1.position, contactPoints1[0], transform2.position, contactPoints2[0], separatingAxis);
-				AddContactPointToBuffer(pointsBuffer, pointCountToIncrement, newPoint);
+				AddContactPointToBuffer(newPointsBuffer, pointCountToIncrement, newPoint);
 				//DebugRendererTempData::Instance().DrawPoint(newPoint + transform1->position);
 			}
 		}
@@ -522,7 +524,7 @@ public:
 				compAdd((outPoint - contactPoints2[1]) * (contactPoints2[0] - contactPoints2[1])) >= 0.0f)
 			{
 				ContactPoint newPoint(transform1.position, contactPoints1[0], transform2.position, contactPoints2[0], separatingAxis);
-				AddContactPointToBuffer(pointsBuffer, pointCountToIncrement, newPoint);
+				AddContactPointToBuffer(newPointsBuffer, pointCountToIncrement, newPoint);
 				//DebugRendererTempData::Instance().DrawPoint(newPoint + transform1->position);
 			}
 		}
@@ -536,7 +538,7 @@ public:
 				compAdd((outPoint - contactPoints1[1]) * (contactPoints1[0] - contactPoints1[1])) >= 0.0f)
 			{
 				ContactPoint newPoint(transform1.position, outPoint, transform2.position, contactPoints2[0], separatingAxis);
-				AddContactPointToBuffer(pointsBuffer, pointCountToIncrement, newPoint);
+				AddContactPointToBuffer(newPointsBuffer, pointCountToIncrement, newPoint);
 				//DebugRendererTempData::Instance().DrawPoint(newPoint + transform1->position);
 			}
 		}
@@ -586,16 +588,16 @@ public:
 			if (tempCols == 1) // TODO review this, it's a kinda hack
 			{
 				ContactPoint newPoint(transform1.position, tempCol[0].point1, transform2.position, tempCol[0].point2, separatingAxis);
-				AddContactPointToBuffer(pointsBuffer, pointCountToIncrement, newPoint);
+				AddContactPointToBuffer(newPointsBuffer, pointCountToIncrement, newPoint);
 				//DebugRendererTempData::Instance().DrawPoint(newPoint + transform1->position);
 			}
 			if (tempCols >= 2) // TODO review this
 			{
 				ContactPoint newPoint1(transform1.position, tempCol[0].point1, transform2.position, tempCol[0].point2, separatingAxis);
-				AddContactPointToBuffer(pointsBuffer, pointCountToIncrement, newPoint1);
+				AddContactPointToBuffer(newPointsBuffer, pointCountToIncrement, newPoint1);
 				//DebugRendererTempData::Instance().DrawPoint(newPoint1 + transform1->position);
 				ContactPoint newPoint2(transform1.position, tempCol[1].point1, transform2.position, tempCol[1].point2, separatingAxis);
-				AddContactPointToBuffer(pointsBuffer, pointCountToIncrement, newPoint2);
+				AddContactPointToBuffer(newPointsBuffer, pointCountToIncrement, newPoint2);
 				//DebugRendererTempData::Instance().DrawPoint(newPoint2 + transform1->position);
 			}
 		}
@@ -618,7 +620,7 @@ public:
 			auto* overlapPointsBuffer = &contactPoints[contactPointsRangeStart]; // TODO go modern?
 
 			std::vector<ContactPoint> newPointsBuffer(MAX_POINTS_PER_OVERLAP * 2); // TODO why *2???
-
+			
 			int pointCount = overlap.GetPointCount();
 
 			for (int pointIndex = 0; pointIndex < pointCount; pointIndex++)
@@ -640,7 +642,7 @@ public:
 
 			// TODO this takes position and orientation
 			if (CalculateSatSimd(t1, t2, shapeData1, shapeData2, separatingAxis))
-				GenerateContacts(t1, t2, shapeData1, shapeData2, separatingAxis, newPointsBuffer.data(), pointCount);
+				GenerateContacts(t1, t2, shapeData1, shapeData2, separatingAxis, newPointsBuffer, pointCount);
 
 			overlap.ResetPointCount();
 

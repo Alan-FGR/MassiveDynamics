@@ -1,23 +1,19 @@
-export module DebugRenderer;
+#pragma once
 
-import <iostream>;
-import <vector>;
-import <sstream>;
-import <iomanip>;
+#include <iostream>
+#include <vector>
+#include <sstream>
+#include <iomanip>
 
-import TypeAliases;
-import Transform;
-import PhysicsWorld;
-import Dynamics;
-import Shape;
-
-import "glm/glm.hpp";
-import "glm/gtx/compatibility.hpp";
-import "glm/ext.hpp";
+#include "glm/glm.hpp"
+#include "glm/gtx/compatibility.hpp"
+#include "glm/ext.hpp"
 
 #define SDL_MAIN_HANDLED
 #include "sdl2/SDL.h"
 #include "SDL_ttf.h"
+
+#include "PhysicsWorld.h"
 
 using namespace glm;
 
@@ -27,14 +23,14 @@ struct Vertex
 	unsigned char r, g, b, a;
 };
 
-void SetVertex(SDL_Vertex& vert, const vec2& position, const Uint8& color)
+static void SetVertex(SDL_Vertex& vert, const vec2& position, const Uint8& color)
 {
 	vert.position.x = position.x;
 	vert.position.y = position.y;
 	std::memcpy(&vert.color, &color, sizeof Uint8 * 3);
 };
 
-export class DebugRenderer
+class DebugRenderer
 {
 	PhysicsWorld& physicsWorld;
 
@@ -43,7 +39,7 @@ export class DebugRenderer
 
 	TTF_Font* Font;
 
-	Transform camera{ vec2{-400,-500}, vec2{2, -2}, mat2x2{vec2{1,0},vec2{0,1}} };
+	Transform camera{ vec2{-400,-300}, vec2{1, -1}, mat2x2{vec2{1,0},vec2{0,1}} };
 	std::vector<Vertex> vertices;
 
 	bool shouldQuit = false;
@@ -167,8 +163,8 @@ public:
 				}
 
 				// Create AABBs pairs
-				auto overlaps = physicsWorld.CreatePairs(sortedAabbs);
-				for (const auto& overlap : overlaps)
+				auto pairs = physicsWorld.CreatePairs(sortedAabbs);
+				for (const auto& overlap : pairs)
 				{
 					const auto& bodyA = physicsWorld.pools.dynamicProperties[overlap.firstEntityIndex];
 					const auto& bodyB = physicsWorld.pools.dynamicProperties[overlap.secondEntityIndex];
@@ -180,7 +176,7 @@ public:
 				}
 
 				// Calculate manifolds (contact points)
-
+				/*auto overlaps = */physicsWorld.CreateOverlaps(pairs);
 
 				// Create joints for contact points
 
@@ -317,7 +313,7 @@ public:
 		if (string.size() <= 0) return;
 		SDL_Surface* surface = TTF_RenderText_Solid(Font, string.c_str(), SDL_Color{ 255, 255, 255, 191 });
 		SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
-		const SDL_Rect rect = { screenPos.x, screenPos.y, surface->w, surface->h };
+		const SDL_Rect rect = { (int)screenPos.x, (int)screenPos.y, surface->w, surface->h };
 		SDL_RenderCopy(renderer, texture, nullptr, &rect);
 		SDL_FreeSurface(surface);
 		SDL_DestroyTexture(texture);
