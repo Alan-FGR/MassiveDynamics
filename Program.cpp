@@ -1,13 +1,10 @@
-﻿#pragma once
-
-#include <iostream>
+﻿#include <iostream>
 
 #include "glm/glm.hpp"
 #include "glm/ext.hpp"
 
 #include "DebugRenderer.h"
 #include "Transform.h"
-#include "PhysicsWorld.h"
 
 float random(float min, float max)
 {
@@ -20,25 +17,25 @@ int main()
     
     PhysicsWorld physicsWorld;
 
-    // auto floor = Transform{ glm::vec2{0, -10}, glm::vec2{400.f, 4.f} };
-    // physicsWorld.AddEntity(floor, 0);
-    //
-    // for (int bodyIndex = 0; bodyIndex < 30; bodyIndex++)
-    // {
-    //     Transform t;
-    //
-    //     t.position = glm::vec2(random(-140.0f, 140.0f), random(10.f, 90.0f));
-    //     const auto length = random(2.0f, 6.0f);
-    //     t.scale = glm::vec2(length, 8 - length);
-    //     t.SetOrientationAngle(random(0, 2));
-    //     
-    //     physicsWorld.AddEntity(t, 0);
-    // }
+    auto floor = Transform{ glm::vec2{0, -200}, glm::vec2{400.f, 4.f} };
+    physicsWorld.AddEntity(floor, 0, true);
+    
+	 //for (int bodyIndex = 0; bodyIndex < 30; bodyIndex++)
+	 //{
+	 //    Transform t;
 
-    physicsWorld.AddEntity(Transform{ glm::vec2{-55, -45}, glm::vec2{100, 100} }, 0);
-    physicsWorld.AddEntity(Transform{ glm::vec2{70, 60}, glm::vec2{100, 100} }, 0);
+	 //    t.position = glm::vec2(random(-40.0f, 40.0f), random(10.f, 90.0f));
+	 //    const auto length = random(2.0f, 6.0f);
+	 //    t.scale = glm::vec2(length, 8 - length);
+	 //    t.SetOrientationAngle(random(0, 0));
+	 //    
+	 //    physicsWorld.AddEntity(t, 0);
+	 //}
 
-	DebugRenderer debugRenderer(physicsWorld);
+    physicsWorld.AddEntity(Transform{ glm::vec2{-5, -14}, glm::vec2{10, 10} }, 0);
+    physicsWorld.AddEntity(Transform{ glm::vec2{7, 10}, glm::vec2{10, 10} }, 0);
+
+	DebugProgram debugRenderer(physicsWorld);
     debugRenderer.RunLoop();
 
 	return 0;

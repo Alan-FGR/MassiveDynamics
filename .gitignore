@@ -5,4 +5,5 @@
 /.vs
 /.idea
 **/*.pdb
-/x64/Debug
+/x64/*
+**/*.user

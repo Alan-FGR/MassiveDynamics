@@ -7,13 +7,13 @@
 
 #include "glm/glm.hpp"
 #include "glm/gtx/compatibility.hpp"
-#include "glm/ext.hpp"
 
 #define SDL_MAIN_HANDLED
 #include "sdl2/SDL.h"
 #include "SDL_ttf.h"
 
 #include "PhysicsWorld.h"
+#include "CollisionSolver.h"
 
 using namespace glm;
 
@@ -30,7 +30,7 @@ static void SetVertex(SDL_Vertex& vert, const vec2& position, const Uint8& color
 	std::memcpy(&vert.color, &color, sizeof Uint8 * 3);
 };
 
-class DebugRenderer
+class DebugProgram
 {
 	PhysicsWorld& physicsWorld;
 
@@ -56,7 +56,7 @@ class DebugRenderer
 	};
 
 public:
-	explicit DebugRenderer(PhysicsWorld& physics_world)
+	explicit DebugProgram(PhysicsWorld& physics_world)
 		: physicsWorld(physics_world)
 	{
 		std::cout << "Starting debug renderer...\n";
@@ -77,10 +77,10 @@ public:
 			std::cout << TTF_GetError() << "\n";
 	}
 
-	DebugRenderer(const DebugRenderer& other) = delete;
-	DebugRenderer& operator=(const DebugRenderer& other) = delete;
+	DebugProgram(const DebugProgram& other) = delete;
+	DebugProgram& operator=(const DebugProgram& other) = delete;
 
-	~DebugRenderer()
+	~DebugProgram()
 	{
 		std::cout << "Destroying debug renderer...\n";
 		SDL_DestroyRenderer(renderer);
@@ -142,28 +142,31 @@ public:
 				// COLLISION
 
 				// Update AABBs
-				auto aabbs = physicsWorld.UpdateAABBs();
+				auto aabbs = physicsWorld.UpdateAABBs(
+					physicsWorld.pools.dynamicProperties,
+					physicsWorld.pools.shapeSize
+				);
 				for (const auto& aabb : aabbs)
 				{
 					RenderAabb(aabb);
 				}
 
 				// Sort AABBs
-				auto sortedAabbs = physicsWorld.SortAabbs(aabbs);
-				for (int i = 0; i < sortedAabbs.size() - 1; ++i)
+				auto sortedAabbs = CollisionSolver::SortAabbs(aabbs);
+				for (size_t i = 0; i < sortedAabbs.size() - 1; ++i)
 				{
 					const auto& current = sortedAabbs[i].originalAabb;
 					const auto& next = sortedAabbs[i+1].originalAabb;
 					
-					RenderLine(
+					/*RenderLine(
 						lerp(current.min, current.max, .5f),
 						lerp(next.min, next.max, .5f),
 						DebugColors::SortingPointer
-					);
+					);*/
 				}
 
 				// Create AABBs pairs
-				auto pairs = physicsWorld.CreatePairs(sortedAabbs);
+				auto pairs = CollisionSolver::CreatePairs(sortedAabbs);
 				for (const auto& overlap : pairs)
 				{
 					const auto& bodyA = physicsWorld.pools.dynamicProperties[overlap.firstEntityIndex];
@@ -176,20 +179,69 @@ public:
 				}
 
 				// Calculate manifolds (contact points)
-				/*auto overlaps = */physicsWorld.CreateOverlaps(pairs);
+				auto contacts = CollisionSolver::CreateOverlaps(pairs, physicsWorld.pools.dynamicProperties, physicsWorld.pools.shapeData);
 
+				for (const auto& debugLine : PhysicsWorld::debugLines)
+					RenderLine(debugLine);
+				
 				// Create joints for contact points
+				auto joints = ImpulseSolver::CreateJoints(pairs, contacts);
 
 				// IMPULSE SOLVING
 
+				static int step = 0;
+
+				auto solverResults = physicsWorld.PrepareSolverData(
+					physicsWorld.pools.dynamicProperties.size()
+				);
+
 				// Solve joints
+				ImpulseSolver::ProcessJoints(
+					physicsWorld.pools.dynamicProperties.size(),
+					contacts.data(),
+					physicsWorld.pools.dynamicProperties,
+					joints, solverResults
+				);
+
+				physicsWorld.ApplySolverData(
+					physicsWorld.pools.dynamicProperties.size(),
+					solverResults
+				);
+
+				step++;
+
+				if (step == 100)
+				{
+					physicsWorld.pools.acceleration[1] = vec2(500.f, 2000.f);
+				}
 
 				// INTEGRATION
 
 				// Apply velocities
-
 				// Apply positions
+				physicsWorld.IntegrateVelocity(0.05f);
+				physicsWorld.IntegratePosition(0.05f);
 
+				physicsWorld.ForEntity([&](
+					EntityId id,
+					const DynamicProperties& dynamicProperties,
+					const vec2& shapeSize,
+					const Shape& shapeData
+					)
+					{
+						Transform t;
+
+						t.position = dynamicProperties.position;
+						t.orientation = dynamicProperties.orientation;
+						t.scale = shapeSize;
+
+						Uint8 col[3];
+						col[0] = ((id + 0) * 40) % 128;
+						col[1] = ((id + 1) * 40) % 128;
+						col[2] = ((id + 2) * 40) % 128;
+
+						RenderBox(t, 0, col[0]);
+					});
 			}
 			
 			SDL_RenderPresent(renderer);
@@ -207,6 +259,9 @@ public:
 
 					if (ev.key.keysym.sym == SDLK_ESCAPE)
 						shouldQuit = true;
+
+					else if (ev.key.keysym.sym == SDLK_SPACE)
+						physicsWorld.AddEntity(Transform{ glm::vec2{0, 10}, glm::vec2{10, 10} }, 0);
 
 					// Camera controls
 					else if (ev.key.keysym.sym == SDLK_w) camera.position += vec2(0, 1) * deltaTime * -cameraSpeed;
@@ -285,6 +340,10 @@ public:
 		SDL_RenderDrawPointF(renderer, p.x, p.y);
 	}
 
+	void RenderLine(const DebugLine& debugLine)
+	{
+		RenderLine(debugLine.start, debugLine.end, SDL_Color{ debugLine.color[0], debugLine.color[1], debugLine.color[2], debugLine.color[3] });
+	}
 	void RenderLine(const vec2& start, const vec2& end, const SDL_Color color)
 	{
 		auto convStart = WorldToScreen(start);

@@ -4,14 +4,14 @@
 
 // TODO profile this vs custom impl
 template <class T>
-struct avx_allocator
+struct AvxAllocator
 {
     //using value_type = T;
     typedef T value_type;
 
-    avx_allocator() = default;
+    AvxAllocator() = default;
     template <class U>
-    constexpr avx_allocator(const avx_allocator<U>&) noexcept {}
+    constexpr AvxAllocator(const AvxAllocator<U>&) noexcept {}
 
     [[nodiscard]] T* allocate(size_t n)
     {
@@ -30,4 +30,4 @@ struct avx_allocator
 };
 
 template<typename T>
-using avx_vector = std::vector<T, avx_allocator<T>>;
+using AvxVector = std::vector<T, AvxAllocator<T>>;

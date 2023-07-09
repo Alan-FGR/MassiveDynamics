@@ -1,7 +1,6 @@
 #pragma once
 
 #include "glm/glm.hpp"
-#include "glm/ext.hpp"
 
 #include "AvxVector.h"
 #include "Shape.h"
@@ -9,6 +8,7 @@
 
 struct DynamicProperties
 {
+    // 8 floats (256b)
     float massInverse;
     float inertiaInverse;
     vec2 position;
@@ -23,25 +23,25 @@ struct DataPools
 	DataPools(DataPools&& other) noexcept = default;
 	DataPools& operator=(DataPools&& other) noexcept = default;
 
-    avx_vector<DynamicProperties> dynamicProperties;
+    AvxVector<DynamicProperties> dynamicProperties;
 
-    avx_vector<vec2> shapeSize;
-    avx_vector<ShapeType> shapeType;
-    avx_vector<Shape> shapeData;
+    AvxVector<vec2> shapeSize;
+    AvxVector<ShapeType> shapeType;
+    AvxVector<Shape> shapeData;
 
-    avx_vector<vec2> acceleration;
-    avx_vector<float> angularAcceleration;
+    AvxVector<vec2> acceleration;
+    AvxVector<float> angularAcceleration;
 
-    avx_vector<vec2> velocity;
-    avx_vector<vec2> displacingVelocity;
-    avx_vector<float> angularVelocity;
-    avx_vector<float> displacingAngularVelocity;
+    AvxVector<vec2> velocity;
+    AvxVector<vec2> displacingVelocity;
+    AvxVector<float> angularVelocity;
+    AvxVector<float> displacingAngularVelocity;
 
     //TODO reuse these in dynamicProperties
-    avx_vector<float> massInverse;
-    avx_vector<float> inertiaInverse;
+    AvxVector<float> massInverse;
+    AvxVector<float> inertiaInverse;
 
-    avx_vector<EntityId> entities;
+    AvxVector<EntityId> entities;
     
     EntityId AddSimulationEntry(const DynamicProperties& dynamicProperties_, const vec2& scale_, ShapeType shapeType_)
     {
