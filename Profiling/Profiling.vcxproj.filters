@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\ArbiterPools.h">
+      <Filter>Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cppConstraint.h">
+      <Filter>Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cpPivotJoint.h">
+      <Filter>Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Integration.h">
+      <Filter>Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\RigidBody.h">
+      <Filter>Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Scene.h">
+      <Filter>Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Collision\CollisionData.h">
+      <Filter>Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Collision\Separation.h">
+      <Filter>Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\MathExtras.h">
+      <Filter>Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\MathTypes.h">
+      <Filter>Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\PhysicsData.h">
+      <Filter>Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DebugRenderer\DebugRenderer.h">
+      <Filter>Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DebugRenderer\DebugTypes.h">
+      <Filter>Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Utils\CollisionUtils.h">
+      <Filter>Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Utils\GeometryUtils.h">
+      <Filter>Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Utils\SolverUtils.h">
+      <Filter>Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\PhysicalShapes\CircleShape.h">
+      <Filter>Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\PhysicalShapes\PhysicalShape.h">
+      <Filter>Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\PhysicalShapes\PolygonShape.h">
+      <Filter>Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\PhysicalShapes\SegmentShape.h">
+      <Filter>Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\MassiveDynamics.cpp">
+      <Filter>Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\RigidBody.cpp">
+      <Filter>Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Utils\CollisionUtils.cpp">
+      <Filter>Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Utils\GeometryUtils.cpp">
+      <Filter>Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\PhysicalShapes\CircleShape.cpp">
+      <Filter>Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\PhysicalShapes\PhysicalShape.cpp">
+      <Filter>Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\PhysicalShapes\PolygonShape.cpp">
+      <Filter>Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\PhysicalShapes\SegmentShape.cpp">
+      <Filter>Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
